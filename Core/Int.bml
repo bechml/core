@@ -1,0 +1,19 @@
+eq : int -> int -> bool := #int_eq;
+
+lt : int -> int -> bool := #int_lt;
+
+gt : int -> int -> bool := #int_gt;
+
+leq : int -> int -> bool := #int_leq;
+
+geq : int -> int -> bool := #int_geq;
+
+add : int -> int -> int := #int_add;
+
+sub : int -> int -> int := #int_sub;
+
+mul : int -> int -> int := #int_mul;
+
+div : int -> int -> int := #int_div;
+
+mod : int -> int -> int := #int_mod;

@@ -1,0 +1,12 @@
+use Super.*;
+
+functor : Functor.t io := { map : #io_map };
+
+applicative : Applicative.t io := {
+  pure : #io_pure,
+  apply : #io_apply
+};
+
+monad : Monad.t io := { bind : #io_bind };
+
+print : string -> io () := #print

@@ -1,0 +1,7 @@
+use Super.*;
+
+t := type <a> { run : a }
+
+functor : Functor.t t := {
+  map : \f i -> { run : (f i.run) }
+};

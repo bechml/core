@@ -1,0 +1,13 @@
+use Super.*;
+
+cons : <a> a -> [a] -> [a] := #list_cons;
+
+append : <a> [a] -> [a] -> [a] := #list_append;
+
+length : <a> [a] -> int := #list_length;
+
+map : <a b> (a -> b) -> [a] -> [b] := #list_map;
+
+functor : Functor.t [] := {
+  map : #list_map
+};

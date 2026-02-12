@@ -1,0 +1,48 @@
+IO := module;
+Int := module;
+Identity := module;
+List := module;
+
+id : <a> a -> a := \a -> a;
+
+const : <a b> a -> b -> a := \a _ -> a;
+
+Functor := module {
+  t := type <f> {
+    map : <a b> (a -> b) -> f a -> f b
+  }
+
+  void : <f a> t f -> f a -> f () := \f fa -> f.map (\_ -> ()) fa
+}
+
+Applicative := module {
+  use Super.*;
+
+  t := type <f> {
+    pure : <a> a -> f a,
+    apply : <a b> f (a -> b) -> f a -> f b
+  }
+
+  replicate : <f a> t f -> int -> f a -> f [a] := \ap n fa ->
+    if Int.leq n 0
+      then ap.pure []
+      else ap.apply (ap.apply (ap.pure (\x xs -> List.cons x xs)) fa) (replicate ap (n - 1) fa);
+}
+
+Monad := module {
+  t := type <m> {
+    bind : <a b> m a -> (a -> m b) -> m b
+  }
+}
+
+Scope := module {
+  use Super.*;
+  
+  t := type <s a> { runUnsafe : a }
+
+  run : <a> (<s> t s a) -> a := \m -> runUnsafe m;
+
+  functor : <s> Functor.t (t s) := {
+    map : \f i -> { runUnsafe : (f (runUnsafe i)) }
+  };
+}
