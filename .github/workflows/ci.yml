@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache bechmlup
+        uses: actions/cache@v4
+        with:
+          path: ~/.bechmlup
+          key: bechmlup-${{ runner.os }}-${{ hashFiles('roux.json') }}
+          restore-keys: |
+            bechmlup-${{ runner.os }}-
+
+      - name: Install bechmlup
+        run: curl -fsSL https://raw.githubusercontent.com/bechml/bechmlup/refs/heads/main/install.sh | bash
+
+      - name: Add bechmlup to PATH
+        run: echo "$HOME/.bechmlup/bin" >> "$GITHUB_PATH"
+
+      - name: Install bechml and roux
+        run: bechmlup install
+
+      - name: Build
+        run: roux build
