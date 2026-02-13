@@ -1,0 +1,23 @@
+t := type
+  | None : <a> t a
+  | Some : <a> a -> t a;
+
+maybe : <a b> b -> (a -> b) -> t a -> b := \def f m -> match m {
+  None -> def,
+  Some x -> f x
+};
+
+fromt : <a> a -> t a -> a := \def m -> match m {
+  None -> def,
+  Some x -> x
+};
+
+isSome : <a> t a -> bool := \m -> match m {
+  Some _ -> true,
+  _ -> false
+};
+
+isNone : <a> t a -> bool := \m -> match m {
+  None -> true,
+  _ -> false
+};

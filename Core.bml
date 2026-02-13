@@ -2,6 +2,7 @@ IO := module;
 Int := module;
 Identity := module;
 List := module;
+Maybe := module;
 Pair := module;
 Reader := module;
 State := module;
@@ -10,6 +11,7 @@ Writer := module;
 id : <a> a -> a := \a -> a;
 
 const : <a b> a -> b -> a := \a _ -> a;
+
 
 Functor := module {
   t := type <f> {

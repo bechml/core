@@ -1,0 +1,18 @@
+t := type
+  | Left : <a b> a -> t a b
+  | Right : <a b> b -> t a b;
+
+either : <a b c> (a -> c) -> (b -> c) -> t a b -> c := \f g e -> match e {
+  Left x -> f x,
+  Right y -> g y
+};
+
+fromLeft : <a b> a -> t a b -> a := \def e -> match e {
+  Left x -> x,
+  _ -> def
+};
+
+fromRight : <a b> b -> t a b -> b := \def e -> match e {
+  Right x -> x,
+  _ -> def
+};
