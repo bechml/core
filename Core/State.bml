@@ -1,0 +1,66 @@
+use Super.*;
+
+t := type <s m> {
+  get : m s,
+  put : s -> m ()
+}
+
+StateT := module {
+  use Super.*;
+  use Core.*;
+
+  t := type <s m a> { run : s -> m (Pair.t a s) }
+
+  functor : <s m> Functor.t m -> Functor.t (t s m) := \fm -> {
+    map : \f sa -> { run : \s -> fm.map (Pair.mapFst f) (sa.run s) }
+  };
+
+  applicative : <s m> Applicative.t m -> Monad.t m -> Applicative.t (t s m) := \am mm -> {
+    pure : \a -> { run : \s -> am.pure (Pair.make a s) },
+    apply : \sf sa -> { run : \s ->
+      mm.bind (sf.run s) (\p ->
+        mm.bind (sa.run p.snd) (\q ->
+          am.pure (Pair.make (p.fst q.fst) q.snd))) }
+  };
+
+  monad : <s m> Monad.t m -> Monad.t (t s m) := \mm -> {
+    bind : \sa f -> { run : \s -> mm.bind (sa.run s) (\p -> (f p.fst).run p.snd) }
+  };
+
+  trans : <s> MonadTrans.t (t s) := {
+    lift : \am mm ma -> { run : \s -> mm.bind ma (\a -> am.pure (Pair.make a s)) }
+  };
+
+  state : <s m> Applicative.t m -> Super.t s (t s m) := \am -> {
+    get : { run : \s -> am.pure (Pair.make s s) },
+    put : \s -> { run : \_ -> am.pure (Pair.make () s) }
+  };
+}
+
+State := module {
+  use Super.*;
+  use Core.*;
+
+  t := type <s a> StateT.t s Identity.t a;
+
+  functor : <s> Functor.t (t s) := {
+    map : \f sa -> { run : \s -> Identity.functor.map (Pair.mapFst f) (sa.run s) }
+  };
+
+  applicative : <s> Applicative.t (t s) := {
+    pure : \a -> { run : \s -> Identity.applicative.pure (Pair.make a s) },
+    apply : \sf sa -> { run : \s ->
+      Identity.monad.bind (sf.run s) (\p ->
+        Identity.monad.bind (sa.run p.snd) (\q ->
+          Identity.applicative.pure (Pair.make (p.fst q.fst) q.snd))) }
+  };
+
+  monad : <s> Monad.t (t s) := {
+    bind : \sa f -> { run : \s -> Identity.monad.bind (sa.run s) (\p -> (f p.fst).run p.snd) }
+  };
+
+  state : <s> Super.t s (t s) := {
+    get : { run : \s -> Identity.applicative.pure (Pair.make s s) },
+    put : \s -> { run : \_ -> Identity.applicative.pure (Pair.make () s) }
+  };
+}

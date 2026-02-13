@@ -2,6 +2,10 @@ IO := module;
 Int := module;
 Identity := module;
 List := module;
+Pair := module;
+Reader := module;
+State := module;
+Writer := module;
 
 id : <a> a -> a := \a -> a;
 
@@ -32,6 +36,21 @@ Applicative := module {
 Monad := module {
   t := type <m> {
     bind : <a b> m a -> (a -> m b) -> m b
+  }
+}
+
+Monoid := module {
+  t := type <a> {
+    empty : a,
+    append : a -> a -> a
+  }
+}
+
+MonadTrans := module {
+  use Super.*;
+
+  t := type <tr> {
+    lift : <m a> Applicative.t m -> Monad.t m -> m a -> tr m a
   }
 }
 

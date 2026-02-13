@@ -5,3 +5,12 @@ t := type <a> { run : a }
 functor : Functor.t t := {
   map : \f i -> { run : (f i.run) }
 };
+
+applicative : Applicative.t t := {
+  pure : \a -> { run : a },
+  apply : \f a -> { run : f.run a.run }
+};
+
+monad : Monad.t t := {
+  bind : \a f -> f a.run
+};

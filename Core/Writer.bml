@@ -1,0 +1,72 @@
+use Super.*;
+
+t := type <w m> {
+  tell : w -> m (),
+  censor : <a> (w -> w) -> m a -> m a
+}
+
+WriterT := module {
+  use Super.*;
+  use Core.*;
+
+  t := type <w m a> { run : m (Pair.t a w) }
+
+  functor : <w m> Functor.t m -> Functor.t (t w m) := \fm -> {
+    map : \f wa -> { run : fm.map (Pair.mapFst f) wa.run }
+  };
+
+  applicative : <w m> Monoid.t w -> Applicative.t m -> Monad.t m -> Applicative.t (t w m) := \mw am mm -> {
+    pure : \a -> { run : am.pure (Pair.make a mw.empty) },
+    apply : \wf wa -> { run :
+      mm.bind wf.run (\p ->
+        mm.bind wa.run (\q ->
+          am.pure (Pair.make (p.fst q.fst) (mw.append p.snd q.snd)))) }
+  };
+
+  monad : <w m> Monoid.t w -> Applicative.t m -> Monad.t m -> Monad.t (t w m) := \mw am mm -> {
+    bind : \wa f -> { run :
+      mm.bind wa.run (\p ->
+        mm.bind ((f p.fst).run) (\q ->
+          am.pure (Pair.make q.fst (mw.append p.snd q.snd)))) }
+  };
+
+  trans : <w> Monoid.t w -> MonadTrans.t (t w) := \mw -> {
+    lift : \am mm ma -> { run : mm.bind ma (\a -> am.pure (Pair.make a mw.empty)) }
+  };
+
+  write : <w m> Applicative.t m -> Super.t w (t w m) := \am -> {
+    tell : \w -> { run : am.pure (Pair.make () w) },
+    censor : \f wa -> { run : am.apply (am.pure (Pair.mapSnd f)) wa.run }
+  };
+}
+
+Writer := module {
+  use Super.*;
+  use Core.*;
+
+  t := type <w a> WriterT.t w Identity.t a;
+
+  functor : <w> Functor.t (t w) := {
+    map : \f wa -> { run : Identity.functor.map (Pair.mapFst f) wa.run }
+  };
+
+  applicative : <w> Monoid.t w -> Applicative.t (t w) := \mw -> {
+    pure : \a -> { run : Identity.applicative.pure (Pair.make a mw.empty) },
+    apply : \wf wa -> { run :
+      Identity.monad.bind wf.run (\p ->
+        Identity.monad.bind wa.run (\q ->
+          Identity.applicative.pure (Pair.make (p.fst q.fst) (mw.append p.snd q.snd)))) }
+  };
+
+  monad : <w> Monoid.t w -> Monad.t (t w) := \mw -> {
+    bind : \wa f -> { run :
+      Identity.monad.bind wa.run (\p ->
+        Identity.monad.bind ((f p.fst).run) (\q ->
+          Identity.applicative.pure (Pair.make q.fst (mw.append p.snd q.snd)))) }
+  };
+
+  write : <w> Super.t w (t w) := {
+    tell : \w -> { run : Identity.applicative.pure (Pair.make () w) },
+    censor : \f wa -> { run : Identity.functor.map (Pair.mapSnd f) wa.run }
+  };
+}

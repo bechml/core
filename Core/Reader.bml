@@ -1,0 +1,58 @@
+use Super.*;
+
+t := type <r m> {
+  ask : m r,
+  local : <a> (r -> r) -> m a -> m a
+}
+
+ReaderT := module {
+  use Super.*;
+  use Core.*;
+
+  t := type <r m a> { run : r -> m a }
+
+  functor : <r m> Functor.t m -> Functor.t (t r m) := \fm -> {
+    map : \f ra -> { run : \r -> fm.map f (ra.run r) }
+  };
+
+  applicative : <r m> Applicative.t m -> Applicative.t (t r m) := \am -> {
+    pure : \a -> { run : \_ -> am.pure a },
+    apply : \rf ra -> { run : \r -> am.apply (rf.run r) (ra.run r) }
+  };
+
+  monad : <r m> Monad.t m -> Monad.t (t r m) := \mm -> {
+    bind : \ra f -> { run : \r -> mm.bind (ra.run r) (\a -> (f a).run r) }
+  };
+
+  trans : <r> MonadTrans.t (t r) := {
+    lift : \_ _ ma -> { run : \_ -> ma }
+  };
+
+  read : <r m> Applicative.t m -> Super.t r (t r m) := \am -> {
+    ask : { run : \r -> am.pure r },
+    local : \f ra -> { run : \r -> ra.run (f r) }
+  };
+}
+
+Reader := module {
+  use Super.*;
+  use Core.*;
+
+  t := type <r a> ReaderT.t r Identity.t a;
+
+  functor : <r> Functor.t (t r) := { map : \f ra -> { run : \r -> id (ra.run r) } };
+
+  applicative : <r> Applicative.t (t r) := {
+    pure : \a -> { run : \_ -> Identity.applicative.pure a },
+    apply : \rf ra -> { run : \r -> Identity.applicative.apply (rf.run r) (ra.run r) }
+  };
+
+  monad : <r> Monad.t (t r) := {
+    bind : \ra f -> { run : \r -> Identity.monad.bind (ra.run r) (\a -> (f a).run r) }
+  };
+
+  read : <r> Super.t r (t r) := {
+    ask : { run : \r -> Identity.applicative.pure r },
+    local : \f ra -> { run : \r -> ra.run (f r) }
+  };
+}

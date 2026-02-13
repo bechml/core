@@ -1,0 +1,17 @@
+use Super.*;
+
+t := type <a b> { fst : a, snd : b }
+
+make : <a b> a -> b -> t a b := \a b -> { fst : a, snd : b };
+
+elim : <a b c> (a -> b -> c) -> t a b -> c := \f p -> f p.fst p.snd;
+
+mapFst : <a b c> (a -> c) -> t a b -> t c b := \f p -> { fst : f p.fst, snd : p.snd };
+
+mapSnd : <a b c> (b -> c) -> t a b -> t a c := \f p -> { fst : p.fst, snd : f p.snd };
+
+swap : <a b> t a b -> t b a := \p -> { fst : p.snd, snd : p.fst };
+
+functor : <a> Functor.t (t a) := {
+  map : \f p -> { fst : p.fst, snd : f p.snd }
+};
